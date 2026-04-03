@@ -1,53 +1,71 @@
-# Metro Journey Planner
+# Metro Journey Planner (Refreshed)
 
-Metro Journey Planner is a web application that helps users plan their metro journeys efficiently. It uses Python with Flask for the backend and Vite with TypeScript for the frontend.
+This is a Metro Journey Planner project that is now set up with an improved workflow and the same core functionality as before.
 
-## Features
+## What the app does
 
-- **Journey Planning**: Users can enter their starting point and destination to get the shortest metro route.
-- **Interactive Map**: Visual representation of the metro lines and stations for better user experience.
-- **Responsive Design**: Works seamlessly on desktop and mobile devices.
+- Computes the shortest metro path from source to destination using an internal metro graph.
+- Calculates travel distance and estimated time/cost.
+- Provides a list of in-between stations for the chosen route.
+- Shows a real-time UI with modern controls and readable styling.
 
-## Technologies Used
+## Stack
 
-- **Backend**: Python, Flask
-- **Frontend**: TypeScript, Vite, HTML/CSS
-- **Mapping**: Leaflet (or any other mapping library you choose)
+- **Backend**: Python + Flask (`backend/metro.py`)
+- **Frontend**: React + TypeScript + Vite (`frontend/src/components/Metro.tsx`)
+- **CORS**: `flask-cors`
 
-## Getting Started
+## Why this is updated
 
-### Prerequisites
+- Added station matching robustness (exact station matching, case-insensitive)
+- Fixed route parsing edge case to avoid `substring not found`
+- Added `intermediate_stations` to response payload
+- UI redesign with better color contrast and route details section
 
-- Python 3.x installed on your machine
-- Node.js and npm (Node Package Manager)
+## Local setup (current project state)
 
-### Installation
+### 1. Backend
 
-1. **Clone the repository**:
+From project root:
 
-   ```bash
-   git clone https://github.com/T-Naveen-2308/Metro-Journey-Planner.git
-   cd metro-journey-planner
-   ```
-2. **Backend Setup:**
+```bash
+cd backend
+python -m pip install -r requirements.txt
+python metro.py
+```
 
-   ```bash
-   # Install dependencies
-   pip install -r requirements.txt
-   ```
-3. **Frontend Setup:**
+Server runs on: `http://127.0.0.1:5000`
 
-   ```bash
-   cd frontend
-   # Install dependencies
-   npm install
-   ```
-## Running the Application
+### 2. Frontend
 
-1. **Run the Flask backend:**
+From project root:
 
-   ```bash
-   # Make sure you are in the root directory of the project
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+Front end runs on a Vite port, e.g. `http://localhost:3000` (or 3001/3002/3003 if used).
+
+## Verified behavior
+
+- `GET /get_elements` populates station dropdown data (Blue/Red/Green line splits)
+- `POST /` returns route details and intermediate stations array:
+  - `source_station`, `destination_station`, `distance`, `time`, `cost`, `intermediate_stations`
+
+## GitHub repository
+
+The repository is now pushed to:
+
+`https://github.com/Souchithreddy/METRO_JOURNEY_PLANNER`
+
+## Notes
+
+- The UI now uses a simple card-like layout for readability.
+- You can hide/show the route map via the toggle button.
+- Error handling is shown in the app when a station is missing or malformed.
+
    python app.py
    ```
 
