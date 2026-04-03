@@ -153,22 +153,53 @@ class Graph_M:
     def get_interchanges(self, s):
         arr = []
         res = s.split("  ")
+        if not res or len(res) < 2:
+            return arr
+        
         arr.append(res[0])
         count = 0
-        for i in range(1, len(res) - 1):
-            index = res[i].index("~")
-            s = res[i][index + 1 :]
-            if len(s) == 2:
-                prev = res[i - 1][res[i - 1].index("~") + 1 :]
-                next = res[i + 1][res[i + 1].index("~") + 1 :]
-                if prev == next:
-                    arr.append(res[i])
+        i = 1
+        while i < len(res) - 1:
+            station = res[i]
+            
+            # Safety check: ensure station contains "~"
+            if "~" not in station:
+                # If no "~" found, treat as regular station
+                arr.append(station)
+                i += 1
+                continue
+                
+            try:
+                index = station.index("~")
+                line_color = station[index + 1:]
+                
+                if len(line_color) == 2:  # Valid line color (like "B", "R", "G")
+                    # Check previous and next stations for line colors
+                    prev_station = res[i - 1]
+                    next_station = res[i + 1] if i + 1 < len(res) - 1 else None
+                    
+                    if "~" in prev_station and next_station and "~" in next_station:
+                        prev_color = prev_station[prev_station.index("~") + 1:]
+                        next_color = next_station[next_station.index("~") + 1:]
+                        
+                        if prev_color == next_color:
+                            arr.append(station)
+                        else:
+                            # Line change detected
+                            arr.append(f"{station} ==> {next_station}")
+                            i += 1  # Skip next station as it's part of interchange
+                            count += 1
+                    else:
+                        arr.append(station)
                 else:
-                    arr.append(f"{res[i]} ==> {res[i + 1]}")
-                    i += 1
-                    count += 1
-            else:
-                arr.append(res[i])
+                    arr.append(station)
+                    
+            except (ValueError, IndexError) as e:
+                # If any error occurs with parsing, just add the station as-is
+                arr.append(station)
+                
+            i += 1
+            
         arr.append(str(count))
         arr.append(res[len(res) - 1])
         return arr
@@ -242,7 +273,7 @@ def get_elements():
         return jsonify(error=str(e))
 
 
-@app.route("/", methods=["GET", "POST"])
+@app.route("/", methods=["POST"])
 def calculate_sum():
     g = Graph_M()
     g.create_metro_map()
@@ -251,15 +282,29 @@ def calculate_sum():
         lis = list(g.vtces.keys())
         st1 = ""
         for st in lis:
-            if data["source_station"] in st:
+            # Extract station name (part before ~)
+            station_name = st.split("~")[0] if "~" in st else st
+            if data["source_station"].strip().lower() == station_name.lower():
                 st1 = st
                 break
         st2 = ""
         for st in lis:
-            if data["destination_station"] in st:
+            # Extract station name (part before ~)
+            station_name = st.split("~")[0] if "~" in st else st
+            if data["destination_station"].strip().lower() == station_name.lower():
                 st2 = st
                 break
-        arr = g.get_interchanges(g.get_minimum_distance(st1, st2))
+        
+        # Validate that both stations were found
+        if not st1:
+            return jsonify(error=f"Source station '{data['source_station']}' not found. Please check the spelling.")
+        if not st2:
+            return jsonify(error=f"Destination station '{data['destination_station']}' not found. Please check the spelling.")
+        
+        path_result = g.get_minimum_distance(st1, st2)
+        arr = g.get_interchanges(path_result)
+        print(f"get_interchanges returned: {arr}")  # Debug print
+        print(f"Length of arr: {len(arr)}")  # Debug print
         length = len(arr)
         dis = round(float(arr[length - 1]), 1)
         ts = dis * 109
@@ -291,6 +336,18 @@ def calculate_sum():
         print("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
         if not time:
             time = "0 Secs"
+        
+        # Extract intermediate stations (clean station names without ~line)
+        intermediate_stations = []
+        for i in range(1, length - 3):
+            station_name = arr[i].split("~")[0] if "~" in arr[i] else arr[i]
+            # Remove " ==> " if present (for interchange stations)
+            if " ==> " in station_name:
+                parts = station_name.split(" ==> ")
+                intermediate_stations.extend([part.strip() for part in parts])
+            else:
+                intermediate_stations.append(station_name)
+        
         return jsonify(
             {
                 "res": {
@@ -299,6 +356,7 @@ def calculate_sum():
                     "distance": f"{dis} KM",
                     "time": time,
                     "cost": f"Rs. {g.cost(dis)}",
+                    "intermediate_stations": intermediate_stations
                 }
             }
         )

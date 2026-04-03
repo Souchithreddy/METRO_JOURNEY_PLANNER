@@ -13,6 +13,7 @@ function Metro() {
 
     const [message, setMessage] = useState<string[] | null>(null);
     const [isVisible, setIsVisible] = useState<boolean>(false);
+    const [intermediateStations, setIntermediateStations] = useState<string[]>([]);
     const [elements, setElements] = useState<{
         BlueLine: string[];
         RedLine: string[];
@@ -71,12 +72,15 @@ function Metro() {
                         `Time: ${result.res.time}`,
                         `Cost: ${result.res.cost}`
                     ]);
+                    setIntermediateStations(result.res.intermediate_stations || []);
                 } else {
                     setMessage([`Error : ${result.error}`]);
+                    setIntermediateStations([]);
                 }
             } else {
                 const error = await response.json();
                 setMessage([`Error: ${error.error}`]);
+                setIntermediateStations([]);
             }
         } catch (error) {
             setMessage([`Error: ${(error as any).message}`]);
@@ -93,7 +97,7 @@ function Metro() {
 
     return (
         <div className="container mt-4">
-            <h1 className="text-light display-3 mb-5">
+            <h1 className="text-dark display-3 mb-5">
                 <img
                     src={hydmetrologo}
                     alt="hyderabad metro logo"
@@ -185,12 +189,25 @@ function Metro() {
                     {message !== null &&
                         message.map((element, index) => (
                             <h1
-                                className="text-light display-6 mt-4"
+                                className="text-dark display-6 mt-4"
                                 key={index}
                             >
                                 {element}
                             </h1>
                         ))}
+                    
+                    {intermediateStations.length > 0 && (
+                        <div className="mt-5">
+                            <h2 className="text-warning display-6">Stations in Between:</h2>
+                            <div className="mt-3">
+                                {intermediateStations.map((station, index) => (
+                                    <span key={index} className="badge bg-secondary me-2 mb-2 p-2">
+                                        {station}
+                                    </span>
+                                ))}
+                            </div>
+                        </div>
+                    )}
                 </div>
             </div>
             <div>
