@@ -40,10 +40,3 @@ npm run dev
 ```
 
 Front end runs on a Vite port, e.g. `http://localhost:3000` (or 3001/3002/3003 if used).
-
-## Verified behavior
-
-- `GET /get_elements` populates station dropdown data (Blue/Red/Green line splits)
-- `POST /` returns route details and intermediate stations array:
-  - `source_station`, `destination_station`, `distance`, `time`, `cost`, `intermediate_stations`
-
