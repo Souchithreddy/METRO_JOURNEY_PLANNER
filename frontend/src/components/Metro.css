@@ -23,6 +23,11 @@ body {
     border-radius: 8px;
 }
 
+.form-select.station-select,
+.form-select.station-select option {
+    color: #000000 !important;
+}
+
 h1,
 h2,
 h3,

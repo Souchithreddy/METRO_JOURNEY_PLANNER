@@ -27,14 +27,14 @@ function Metro() {
     useEffect(() => {
         async function fetchData() {
             try {
-                const response = await fetch("http://127.0.0.1:5000/get_elements");
+                const response = await fetch("http://127.0.0.1:5000/stations");
                 if (response.ok) {
                     const data = await response.json();
                     console.log("Data:", data);
                     setElements({
-                        BlueLine: data.elements.BlueLine || [],
-                        RedLine: data.elements.RedLine || [],
-                        GreenLine: data.elements.GreenLine || []
+                        BlueLine: data.stations.Blue || [],
+                        RedLine: data.stations.Red || [],
+                        GreenLine: data.stations.Green || []
                     });
                 } else {
                     console.error("Failed to fetch elements");
@@ -52,30 +52,26 @@ function Metro() {
 
     const onSubmit: SubmitHandler<FieldValues> = async (data: FieldValues) => {
         try {
-            const response = await fetch("http://127.0.0.1:5000/", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify({
-                    source_station: data.sourceStation,
-                    destination_station: data.destinationStation
-                })
-            });
+            // REPLACE WITH THIS (new code)
+            const url = `http://127.0.0.1:5000/route?source=${encodeURIComponent(data.sourceStation)}&target=${encodeURIComponent(data.destinationStation)}`;
+            const response = await fetch(url, { method: "GET" });
 
             if (response.ok) {
                 const result = await response.json();
-                if ("res" in result) {
-                    console.log(result);
-                    setMessage([
-                        `Distance: ${result.res.distance}`,
-                        `Time: ${result.res.time}`,
-                        `Cost: ${result.res.cost}`
-                    ]);
-                    setIntermediateStations(result.res.intermediate_stations || []);
-                } else {
-                    setMessage([`Error : ${result.error}`]);
+               if (result.error) {
+                    setMessage([`Error: ${result.error}`]);
                     setIntermediateStations([]);
+                } else {
+                    setMessage([
+                        `Distance: ${result.total_distance_km} KM`,
+                        `Time: ${result.formatted_time}`,
+                        `Cost: Rs. ${result.fare}`
+                    ]);
+                    setIntermediateStations(
+                        result.route
+                            ? result.route.map((stop: any) => stop.station)
+                            : []
+                    );
                 }
             } else {
                 const error = await response.json();
@@ -123,7 +119,7 @@ function Metro() {
                             Source Station:
                         </label>
                         <select
-                            className="form-select form-control mt-2"
+                            className="form-select form-control station-select mt-2"
                             defaultValue=""
                             {...register("sourceStation", { required: true })}
                         >
@@ -152,7 +148,7 @@ function Metro() {
                             Destination Station:
                         </label>
                         <select
-                            className="form-select form-control mt-2"
+                            className="form-select form-control station-select mt-2"
                             defaultValue=""
                             {...register("destinationStation", {
                                 required: true
